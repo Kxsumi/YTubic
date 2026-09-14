@@ -105,8 +105,7 @@ export function useAudioEngine() {
   } | null>(null);
   // Guard against stale stream resolutions when the user skips mid-fetch.
   const resolveTokenRef = useRef(0);
-  // Stretches the listener chose to sit through: skipped once already, or
-  // deliberately scrubbed back into. Never auto-skipped again.
+  // Skipped once, or scrubbed back into on purpose. Never jumped again.
   const sparedSegmentsRef = useRef<Set<string>>(new Set());
   // Counts how many tracks have failed in a row without a successful
   // play in between. Reset to 0 on `playing`. Used to short-circuit
@@ -327,8 +326,7 @@ export function useAudioEngine() {
       const el = e.currentTarget as HTMLAudioElement;
       const segments = useSponsorSegments.getState().segments;
       const seg = segments.length ? segmentAt(el.currentTime, segments) : null;
-      // A stretch running to the very end is left alone: seeking there
-      // would race the track's own ending against the crossfade.
+      // Seeking a trailing stretch would race the crossfade.
       const endsTrack = el.duration > 0 && seg && seg.end >= el.duration - 1;
       if (seg && !endsTrack && !sparedSegmentsRef.current.has(segmentKey(seg))) {
         sparedSegmentsRef.current.add(segmentKey(seg));
@@ -430,9 +428,7 @@ export function useAudioEngine() {
       retriedTrackRef.current = null;
       store().setStatus("ready");
     };
-    // Landing inside a stretch can only be the listener's own doing: the
-    // auto-skip seeks to a segment's end, which is outside it. Spare it so
-    // scrubbing back into an intro isn't undone a moment later.
+    // The auto-skip lands outside a segment, so landing inside one is deliberate.
     const onSeeked = (e: Event) => {
       if (!isActive(e)) return;
       const el = e.currentTarget as HTMLAudioElement;
@@ -481,8 +477,6 @@ export function useAudioEngine() {
     videoId ? resolveStreamId(videoId, s.byVideoId) : undefined,
   );
 
-  // Non-music stretches to jump, looked up per stream. Only music videos
-  // carry them, so the song side is never queried.
   const skipNonMusic = usePlaybackSettings((s) => s.skipNonMusic);
   const onVideoSource = useTrackSourceStore(
     (s) => !!videoId && s.byVideoId[videoId]?.selected === "video",
@@ -931,11 +925,7 @@ export function useAudioEngine() {
     );
   }, [status, nextStreamVideoId]);
 
-  // Carry a deliberate switch to Video across track changes, and warm the
-  // next track's video while the current one plays. Both only run once
-  // the user has actually chosen Video: resolving an alternate costs a
-  // search plus yt-dlp verification, and the file itself can be hundreds
-  // of megabytes, so neither is worth spending on a song-mode listener.
+  // Both gated on Video being chosen: a resolve costs a search, a file costs MBs.
   const followVideoMode = usePlaybackSettings((s) => s.followVideoMode);
   const warmNextVideo = usePlaybackSettings((s) => s.warmNextVideo);
   const preferVideo =
@@ -975,10 +965,7 @@ export function useAudioEngine() {
       if (!upcoming || upcoming.videoId !== nextVideoId) return;
       const altId = await resolveVideoFor(upcoming);
       if (cancelled || !altId) return;
-      // Flip it now rather than when it starts: selecting video mid-track
-      // swaps the audio source out from under the element and restarts
-      // the song, which is what following the mode would otherwise do to
-      // every single track.
+      // Flipping mid-track would swap the source out and restart the song.
       useTrackSourceStore.getState().setSelected(nextVideoId, "video");
       if (!warmNextVideo) return;
       await prefetchVideo(altId, await getVideoQualityTier());

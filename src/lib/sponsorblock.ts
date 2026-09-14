@@ -7,11 +7,7 @@ const SPONSORBLOCK_API = "https://sponsor.ajay.app/api/skipSegments";
 const CATEGORY = "music_offtopic";
 const REQUEST_TIMEOUT_MS = 5000;
 
-/**
- * The video id never leaves the machine: SponsorBlock's privacy endpoint
- * takes the first four hex characters of its SHA-256 and answers with
- * every video sharing that prefix, which we then filter locally.
- */
+// Privacy endpoint: only a hash prefix is sent, and we filter locally.
 async function sha256HexPrefix(input: string, len: number): Promise<string> {
   const data = new TextEncoder().encode(input);
   const digest = await crypto.subtle.digest("SHA-256", data);

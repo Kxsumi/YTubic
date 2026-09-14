@@ -59,13 +59,7 @@ export async function videoStreamUrlFor(
 
 const prefetchedVideos = new Set<string>();
 
-/**
- * Warm the video cache for a videoId. `/video/` only answers once the
- * whole file is on disk, so without this the fullscreen backdrop pays
- * the entire download as dead time on screen. Asks for a single byte:
- * the server still downloads everything, but none of it is carried back
- * into the page.
- */
+// One byte: the server still downloads it all, the page carries none of it.
 export async function prefetchVideo(
   videoId: string,
   tier: VideoQualityTier,

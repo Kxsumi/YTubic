@@ -171,9 +171,7 @@ function VideoBackdrop({
             if (off > SYNC_TOLERANCE) el.currentTime = target;
             if (el.playbackRate !== 1) el.playbackRate = 1;
           } else if (off > SYNC_TOLERANCE) {
-            // Ease the picture back onto the audio instead of jumping.
-            // A seek this small costs a visible hitch and re-drifts within
-            // seconds; the rate change is imperceptible on a muted video.
+            // A seek this small costs a visible hitch; a rate trim does not.
             const trim = Math.max(
               -SYNC_MAX_RATE_TRIM,
               Math.min(SYNC_MAX_RATE_TRIM, drift),
@@ -251,13 +249,7 @@ function FullscreenView({ track }: { track: QueueTrack }) {
   const showVideo =
     sourceRecord?.selected === "video" && !!sourceRecord.video && !videoErrored;
 
-  // Hold the audio while the backdrop is still fetching, so the track
-  // doesn't run ahead of the picture. Released on a frame, on an error,
-  // on leaving the view, and by the timer regardless: a video that never
-  // arrives must not strand playback.
-  // Chrome recedes once the mouse settles, the way a fullscreen video
-  // player does. Held open while paused: a stopped track means the user
-  // is on their way to a control, not watching.
+  // Held open while paused: a stopped track means a control is being reached for.
   const idleFade = useSettingsStore((s) => s.fullscreenIdleFade);
   const [idle, setIdle] = useState(false);
   const idleTimer = useRef<number | null>(null);
@@ -277,6 +269,7 @@ function FullscreenView({ track }: { track: QueueTrack }) {
   }, []);
   const chromeHidden = idle && playing && idleFade;
 
+  // The timer releases regardless, so a video that never lands cannot strand it.
   const awaitingVideo = showVideo && !videoReady;
   useEffect(() => {
     if (!awaitingVideo) {

@@ -3228,8 +3228,7 @@ struct StreamServer {
     /// in-flight independently for the two modes.
     ephemeral_dir: PathBuf,
     cover_dir: PathBuf,
-    /// Music-video files for the full-screen backdrop. Session-only,
-    /// wiped on startup like the ephemeral audio cache.
+    /// Backdrop videos. Session-only, wiped on startup.
     video_dir: PathBuf,
     downloads: DownloadMap,
     /// Expected location of the managed yt-dlp copy. Resolution to an
@@ -4216,11 +4215,7 @@ struct VideoMeta {
     duration: Option<f64>,
 }
 
-/// Title and uploader for one video, straight from YouTube's oembed
-/// endpoint. Two orders of magnitude cheaper than a yt-dlp extraction
-/// (one small HTTP GET, no process spawn), so every candidate can afford
-/// one; the fields yt-dlp alone can answer (verified badge, channel id,
-/// category) still need `probe_video_meta` on the finalists.
+/// Title and uploader from oembed: one small GET, no process spawn.
 #[derive(serde::Serialize)]
 struct VideoBrief {
     id: String,

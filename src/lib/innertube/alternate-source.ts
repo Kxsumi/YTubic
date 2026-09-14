@@ -25,13 +25,7 @@ function normalizeArtist(name: string): string {
 
 const ARTIST_SPLIT = /\s*(?:,|&|、|\/|\bfeat\.?\b|\bft\.?\b)\s*/i;
 
-/**
- * A collaboration arrives as one string ("VALORANT & KiNG MALA"), so every
- * artist check ends up matching against a blob: a channel called "Mala"
- * passes because "valorantkingmala" contains "mala". Splitting adds the
- * individual names WITHOUT dropping the original, so anything that matched
- * before still matches and per-name checks get something real to compare.
- */
+// Keeps the combined string as well, so nothing that matched before stops.
 function expandArtistNames(names: string[]): string[] {
   const out = new Set<string>();
   for (const name of names) {
@@ -155,16 +149,26 @@ function titleTokens(title: string): string[] {
     .filter(Boolean);
 }
 
+// Everything past the first break is furniture many uploads share verbatim.
+function titleHead(title: string): string {
+  const lead = title.split(/\s*[|:–—]\s*|\s+-\s+/, 1)[0];
+  return lead && titleTokens(lead).length > 0 ? lead : title;
+}
+
 function titleCoverage(
   item: ShelfItem,
   trackTitle: string,
-): { coverage: number; extra: number } {
+): { coverage: number; headCoverage: number; extra: number } {
   const trackTok = titleTokens(trackTitle);
-  if (trackTok.length === 0) return { coverage: 1, extra: 0 };
+  if (trackTok.length === 0)
+    return { coverage: 1, headCoverage: 1, extra: 0 };
   const itemTok = titleTokens(item.title);
   const overlap = trackTok.filter((t) => itemTok.includes(t)).length;
+  const headTok = titleTokens(titleHead(trackTitle));
+  const headHit = headTok.filter((t) => itemTok.includes(t)).length;
   return {
     coverage: overlap / trackTok.length,
+    headCoverage: headTok.length > 0 ? headHit / headTok.length : 1,
     extra: itemTok.length - trackTok.length,
   };
 }
@@ -181,14 +185,7 @@ const DURATION_MAX_RATIO = 2.5;
 const VIDEO_HINT = /\b(music\s*video|official\s*video|\bmv\b)/i;
 const AUDIO_HINT = /\baudio\b/i;
 
-/**
- * 0 when the title says outright that this is the form being asked for.
- * Deliberately binary: the losing side used to be graded "audio" vs
- * "neither", which only works in English, so a Turkish "Resmi Müzik"
- * outranked the main channel's "Official Audio" for being unreadable.
- * Everything that isn't a declared match ties here and is settled by
- * popularity instead, which no language can hide from.
- */
+// Binary on purpose: grading the loser needs English, so views decide there.
 function formatRank(title: string, targetKind: SourceKind): number {
   const looksVideo = VIDEO_HINT.test(title);
   const looksAudio = AUDIO_HINT.test(title);
@@ -250,8 +247,17 @@ export async function findAlternateVideoId(
       if (!matchesArtist(item, expectedArtists)) continue;
       if (hasUnexpectedArtist(item, expectedArtists)) continue;
       if (trackTitle) {
-        const { coverage, extra } = titleCoverage(item, trackTitle);
-        if (coverage < MIN_TITLE_COVERAGE || extra > MAX_EXTRA_TITLE_TOKENS) continue;
+        const { coverage, headCoverage, extra } = titleCoverage(
+          item,
+          trackTitle,
+        );
+        if (
+          coverage < MIN_TITLE_COVERAGE ||
+          headCoverage < MIN_TITLE_COVERAGE ||
+          extra > MAX_EXTRA_TITLE_TOKENS
+        ) {
+          continue;
+        }
       }
       candidates.push(item);
     }

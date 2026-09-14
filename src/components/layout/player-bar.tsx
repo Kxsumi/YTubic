@@ -314,10 +314,7 @@ export function ProgressSlider({
   );
 }
 
-/**
- * SponsorBlock's own colour for a music_offtopic stretch. Handed to the
- * slider as `marks` so the played fill and the thumb still paint over it.
- */
+// Handed to the slider as `marks`, so the fill and thumb stay on top.
 function SponsorMarks({ duration }: { duration: number }) {
   const segments = useSponsorSegments((s) => s.segments);
   if (duration <= 0 || segments.length === 0) return null;

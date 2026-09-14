@@ -1,16 +1,6 @@
 import { rawNext, type YtNode } from "./shared";
 
-/**
- * The videoId YT Music itself pairs with `videoId` for the Song/Video
- * switch in its own player. /next wraps a track that exists in both forms
- * in a `playlistPanelVideoWrapperRenderer`: `primaryRenderer` is the form
- * that was asked for, `counterpart` is the other one.
- *
- * Authoritative wherever it exists, and it is the only thing that finds a
- * pairing whose two titles share no words at all: VALORANT's "Toxic" is
- * published as the music video "WHY WE FIGHT BACK", which no amount of
- * title or artist matching against the search results can reach.
- */
+/** YT Music's own song/video pairing, when it exposes one. */
 export async function fetchCounterpartVideoId(
   videoId: string,
 ): Promise<string | null> {

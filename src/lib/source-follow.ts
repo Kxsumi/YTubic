@@ -7,23 +7,12 @@ import type { QueueTrack } from "@/lib/store/playback";
 const inFlight = new Map<string, Promise<string | null>>();
 const noVideo = new Set<string>();
 
-/**
- * The music-video id for a track, from cache or resolved on demand.
- * Deduped by videoId: the follow effect and the next-track prefetcher
- * both ask about the same track, and each miss costs a search plus a
- * round of yt-dlp verification.
- *
- * Returns null when the track has no video worth switching to, which is
- * a real answer and gets cached as such by the caller staying on song.
- */
+/** Cached or freshly resolved music-video id, null when there isn't one. */
 export function resolveVideoFor(track: QueueTrack): Promise<string | null> {
   const known = useTrackSourceStore.getState().byVideoId[track.videoId];
   if (known?.video) return Promise.resolve(known.video);
   if (noVideo.has(track.videoId)) return Promise.resolve(null);
-  // Share the running lookup rather than reporting "none": skipping makes
-  // the prefetcher and the follow effect ask about the same track at once,
-  // and answering the second one null drops it back to audio for a track
-  // whose video was seconds from arriving.
+  // Share an in-flight lookup; answering null would read as "no video".
   const running = inFlight.get(track.videoId);
   if (running) return running;
 

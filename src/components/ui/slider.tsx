@@ -29,9 +29,7 @@ function Slider({
   marks,
   ...props
 }: React.ComponentProps<typeof SliderPrimitive.Root> & {
-  // Painted over the inactive pill but under the active one, so anything
-  // a consumer marks on the track still reads as unplayed ahead of the
-  // thumb and stays behind the fill once passed.
+  // Painted over the inactive pill, under the active one.
   marks?: React.ReactNode
 }) {
   const _values = React.useMemo(

@@ -12,6 +12,7 @@ import {
   IconThumbUp,
   IconTypography,
   IconEyeOff,
+  IconPictureInPicture,
 } from "@tabler/icons-react";
 import {
   DropdownMenu,
@@ -115,6 +116,7 @@ export function AppearanceTab() {
         <PlayerLayoutRow />
         <FullscreenLayoutRow />
         <IdleFadeRow />
+        <FloatingFadeRow />
       </Group>
     </TabPane>
   );
@@ -451,19 +453,38 @@ const PLAYER_TILES: {
  * "album" wash, a cover, the title bars and the transport with its play
  * button.
  */
+function FloatingFadeRow() {
+  const on = useSettingsStore((s) => s.floatingFadeWhenUnfocused);
+  const set = useSettingsStore((s) => s.setFloatingFadeWhenUnfocused);
+  return (
+    <SettingRow
+      icon={IconPictureInPicture}
+      title="Dim the Floating Player"
+      description="Fade the floating player out while another window is in front of it."
+      control={
+        <Switch
+          checked={on}
+          onCheckedChange={set}
+          aria-label="Dim the Floating Player"
+        />
+      }
+    />
+  );
+}
+
 function IdleFadeRow() {
   const on = useSettingsStore((s) => s.fullscreenIdleFade);
   const set = useSettingsStore((s) => s.setFullscreenIdleFade);
   return (
     <SettingRow
       icon={IconEyeOff}
-      title="Hide Controls When Idle"
+      title="Hide the UI in Fullscreen"
       description="Fade the full-screen controls away once the mouse stops moving."
       control={
         <Switch
           checked={on}
           onCheckedChange={set}
-          aria-label="Hide Controls When Idle"
+          aria-label="Hide the UI in Fullscreen"
         />
       }
     />

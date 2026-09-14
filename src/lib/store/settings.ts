@@ -35,6 +35,9 @@ type State = {
   fullscreenLayout: FullscreenLayout;
   /** Let the full-screen controls recede once the mouse settles. */
   fullscreenIdleFade: boolean;
+  /** Dim the floating player while it sits in the background, so it
+   *  stays out of the way of whatever is in front of it. */
+  floatingFadeWhenUnfocused: boolean;
   /** System toast on track change while the app is in the background
    *  (see `lib/playback-notifications.ts`). */
   playbackNotifications: boolean;
@@ -68,6 +71,7 @@ type State = {
   setRatingButtons: (v: RatingButtons) => void;
   setFullscreenLayout: (v: FullscreenLayout) => void;
   setFullscreenIdleFade: (v: boolean) => void;
+  setFloatingFadeWhenUnfocused: (v: boolean) => void;
   setPlaybackNotifications: (v: boolean) => void;
   setDiscordRichPresence: (v: boolean) => void;
   setLastfmEnabled: (v: boolean) => void;
@@ -96,6 +100,7 @@ export const useSettingsStore = create<State>()(
       ratingButtons: "heart",
       fullscreenLayout: "cover",
       fullscreenIdleFade: true,
+      floatingFadeWhenUnfocused: false,
       playbackNotifications: false,
       discordRichPresence: false,
       lastfmEnabled: false,
@@ -111,6 +116,8 @@ export const useSettingsStore = create<State>()(
       setRatingButtons: (ratingButtons) => set({ ratingButtons }),
       setFullscreenLayout: (fullscreenLayout) => set({ fullscreenLayout }),
       setFullscreenIdleFade: (fullscreenIdleFade) => set({ fullscreenIdleFade }),
+      setFloatingFadeWhenUnfocused: (floatingFadeWhenUnfocused) =>
+        set({ floatingFadeWhenUnfocused }),
       setPlaybackNotifications: (playbackNotifications) =>
         set({ playbackNotifications }),
       setDiscordRichPresence: (discordRichPresence) =>
